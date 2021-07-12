@@ -1,0 +1,152 @@
+---
+title: "decathlon"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+#read in the raw data about decathlon
+```{r}
+library(here)
+
+decathlon_data <- read_rds(here("raw_data/decathlon.rds"))
+
+#look at the overview
+glimpse(decathlon_data)
+```
+
+# convert row names to a column with values
+```{r}
+library(tibble)
+decathlon_data_clean <- rownames_to_column(decathlon_data, var = "names")
+```
+
+# clean column names
+```{r}
+library(janitor)
+
+decathlon_data_clean <- decathlon_data_clean %>% 
+  clean_names() %>% 
+  rename("100m" = "x100m", "400m" = "x400m", "110m_hurdle" = "x110m_hurdle", "1500m" = "x1500m")
+
+
+decathlon_data_clean
+```
+# convert all names to lowercase
+```{r}
+decathlon_data_clean <- decathlon_data_clean %>% 
+ mutate(names = tolower(names))
+```
+
+# pivot table to longer format
+```{r}
+decathlon_data_long <- decathlon_data_clean %>% 
+  pivot_longer(2:11, names_to = "event", values_to = "result")
+
+decathlon_data_long
+```
+# check for NAs in the data
+```{r}
+decathlon_data_long %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+```
+
+# check for zeros in the result column
+```{r}
+decathlon_data_long %>% 
+  filter(result == 0)
+```
+
+# Who had the longest long jump seen in the data?
+```{r}
+#filter by event and get the highest number in result
+longest_jump <- decathlon_data_long %>% 
+  filter(event == "long_jump") %>% 
+  slice_max(result, n = 1)
+
+longest_jump 
+```
+
+# What was the average 100m time in each competition?
+```{r}
+#group by competition and filter by event to get the average for both competition
+avg_100m <- decathlon_data_long %>% 
+  group_by(competition) %>% 
+  filter(event == "100m") %>% 
+  summarise(mean(result)) 
+
+avg_100m
+```
+
+# Who had the highest total points across both competitions?
+```{r}
+# group by name
+# get total points for everyone 
+# pull out highest total_points
+highest_total_points <- decathlon_data_long %>% 
+  group_by(names) %>% 
+  summarise(total_points = sum(points)) %>% 
+  select(names, total_points) %>% 
+  ungroup() %>% 
+  slice_max(total_points, n =1)
+
+highest_total_points
+```
+
+# What was the shot-put scores for the top three competitors in each competition?
+
+```{r}
+#top 3 competitors in each competition
+
+#first get top 3 competitors in Decaster and create a vector
+decaster_top3 <- decathlon_data_long %>% 
+  group_by(names) %>% 
+  filter(competition == "Decastar") %>% 
+  filter(rank == c("1", "2", "3")) %>% 
+  select("names") %>% 
+  distinct() %>% 
+  pull()
+
+#first get top 3 competitors in OlympicG and create a vector
+olympicg_top3 <- decathlon_data_long %>% 
+  group_by(names) %>% 
+  filter(competition == "OlympicG") %>% 
+  filter(rank == c("1", "2", "3")) %>% 
+  select("names") %>% 
+  distinct() %>% 
+  pull()
+
+#filter byy results in above code  and then filter on shot put scores
+shot_put_scores_top_3 <- decathlon_data_long %>% 
+  filter(names %in% decaster_top3) %>% 
+  filter(event == "shot_put")
+
+shot_put_scores_top_3
+```
+
+#What was the average points for competitors who ran the 400m in less than 50 seconds vs. those than ran 400m in more than 50 seconds?
+```{r}
+# get the average points for competitors who ran the 400m in less than 50 seconds
+avg_points_400m_under_50s <- decathlon_data_long %>% 
+  filter(event == "400m", 
+         result < "50") %>% 
+  summarise(mean(points)) %>% 
+  pull()
+  
+# get the average points for competitors who ran the 400m in more than 50 seconds
+avg_points_400m_over_50s <- decathlon_data_long %>% 
+  filter(event == "400m", 
+         result > "50") %>% 
+  summarise(mean(points)) %>% 
+  pull()
+
+# calculate the difference
+difference_in_avg_400m <- 
+  sum(avg_points_400m_under_50s - avg_points_400m_over_50s)
+
+difference_in_avg_400m
+```
+
