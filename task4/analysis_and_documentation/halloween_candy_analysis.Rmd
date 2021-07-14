@@ -1,0 +1,197 @@
+---
+title: "halloween_candy_analysis"
+author: "Barry O Dea"
+date: "14/07/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+here::here()
+```
+
+
+```{r}
+library(here)
+candy_rating_top_countries <- read_csv(here("clean_data/candy_rating_top_countries.csv"))
+```
+
+#What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)?
+```{r}
+rating_count <- candy_rating_top_countries %>% 
+  group_by(year) %>% 
+  count(rating) %>% 
+  filter(rating != "no_rating") %>% 
+  ungroup()
+
+ratings_per_year <- rating_count %>% 
+  group_by(year) %>% 
+  summarise(sum(n))
+```
+
+
+
+#What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+```{r}
+mean_age_going_out <- candy_rating_top_countries %>% 
+  filter(age > 0, age < 100) %>% 
+  filter(going_out == "Yes") %>% 
+  summarise(mean(age)) %>% 
+  pull()
+```
+
+
+```{r}
+mean_age_not_going_out <- candy_rating_top_countries %>% 
+  filter(age > 0, age < 100) %>% 
+  filter(going_out == "No") %>% 
+  summarise(mean(age)) %>% 
+  pull()
+```
+
+#For each of joy, despair and meh, which candy bar revived the most of these ratings?
+```{r}
+top_rating_per_candy <- candy_rating_top_countries %>% 
+  group_by(rating) %>% 
+  count(candy) %>% 
+  slice_max(n, n = 1)
+
+top_rating_per_candy
+```
+
+# How many people rated Starburst as despair?
+```{r}
+starburst_despair_count <- candy_rating_top_countries %>% 
+  group_by(rating) %>% 
+  filter(candy == "starburst",
+         rating == "DESPAIR") %>% 
+  count(rating) 
+```
+
+
+
+#For the next three questions, count despair as -1, joy as +1 and meh as 0.
+```{r}
+candy_rating_nums <- candy_rating_top_countries %>% 
+  filter(rating != "no_rating") %>% 
+  mutate(rating_num = 
+           case_when(
+             rating == "DESPAIR" ~ -1,
+             rating == "JOY" ~ 1,
+             rating == "MEH" ~ 0
+           ))
+```
+
+What was the most popular candy bar by this rating system for each gender in the dataset?
+```{r}
+top_rating_per_male <- candy_rating_nums %>% 
+  filter(gender =="Male")%>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num) 
+
+top_rating_per_male
+```
+
+
+```{r}
+top_rating_per_female <- candy_rating_nums %>% 
+  filter(gender =="Female")%>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num) 
+
+top_rating_per_female
+```
+```{r}
+top_rating_per_other <- candy_rating_nums %>% 
+  filter(gender =="Other")%>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num) 
+
+top_rating_per_other
+```
+
+```{r}
+top_rating_per_not_say <- candy_rating_nums %>% 
+  filter(gender =="I'd rather not say")%>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num) 
+
+top_rating_per_not_say
+```
+```{r}
+top_rating_per_unknown <- candy_rating_nums %>% 
+  filter(gender =="unknown")%>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num) 
+
+top_rating_per_unknown
+```
+#What was the most popular candy bar in each year?
+```{r}
+#2015
+top_rated_2015 <- candy_rating_nums %>% 
+  filter(year == "2015") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+
+#2016
+top_rated_2016 <- candy_rating_nums %>% 
+  filter(year == "2016") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+
+#2017
+top_rated_2017 <- candy_rating_nums %>% 
+  filter(year == "2017") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+```
+ 
+#What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+```{r}
+#US
+top_rated_USA <- candy_rating_nums %>% 
+  filter(country == "USA") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+top_rated_USA
+
+#Canada
+top_rated_canada <- candy_rating_nums %>% 
+  filter(country == "Canada") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+top_rated_canada
+
+#UK
+top_rated_uk <- candy_rating_nums %>% 
+  filter(country == "UK") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+top_rated_uk
+
+#other
+top_rated_other <- candy_rating_nums %>% 
+  filter(country == "Other") %>% 
+  group_by(candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+top_rated_other
+```
+
+
