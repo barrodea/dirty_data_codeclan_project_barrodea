@@ -1,14 +1,17 @@
 ---
-title: "decathlon"
+title: "decathlon_data"
 output: html_document
 ---
 
+# The prupose of this file is to take the clean Decathlon Data created in the previous task and perform the required analysis
+
+# 1. Install the required packages
 ```{r}
 library(tidyverse)
 ```
 
 
-#read in the clean data about decathlon
+# 2. Read in the clean data about decathlon
 ```{r}
 library(here)
 
@@ -18,8 +21,8 @@ decathlon_data_long <- read_csv(here("clean_data/decathlon_data_long.csv"))
 glimpse(decathlon_data_long)
 ```
 
-
-# Who had the longest long jump seen in the data?
+# Perfirn the necessary analysis
+# Q1. Who had the longest long jump seen in the data?
 ```{r}
 #filter by event and get the highest number in result
 longest_jump <- decathlon_data_long %>% 
@@ -29,7 +32,7 @@ longest_jump <- decathlon_data_long %>%
 longest_jump 
 ```
 
-# What was the average 100m time in each competition?
+# Q2. What was the average 100m time in each competition?
 ```{r}
 #group by competition and filter by event to get the average for both competition
 avg_100m <- decathlon_data_long %>% 
@@ -40,7 +43,7 @@ avg_100m <- decathlon_data_long %>%
 avg_100m
 ```
 
-# Who had the highest total points across both competitions?
+# Q3. Who had the highest total points across both competitions?
 ```{r}
 # group by name
 # get total points for everyone 
@@ -55,7 +58,7 @@ highest_total_points <- decathlon_data_long %>%
 highest_total_points
 ```
 
-# What was the shot-put scores for the top three competitors in each competition?
+# Q4. What was the shot-put scores for the top three competitors in each competition?
 
 ```{r}
 #top 3 competitors in each competition
@@ -64,7 +67,7 @@ highest_total_points
 decaster_top3 <- decathlon_data_long %>% 
   group_by(names) %>% 
   filter(competition == "Decastar") %>% 
-  filter(rank == c("1", "2", "3")) %>% 
+  filter(rank == c(1, 2, 3)) %>% 
   select("names") %>% 
   distinct() %>% 
   pull()
@@ -73,7 +76,7 @@ decaster_top3 <- decathlon_data_long %>%
 olympicg_top3 <- decathlon_data_long %>% 
   group_by(names) %>% 
   filter(competition == "OlympicG") %>% 
-  filter(rank == c("1", "2", "3")) %>% 
+  filter(rank == c(1, 2, 3)) %>% 
   select("names") %>% 
   distinct() %>% 
   pull()
@@ -82,11 +85,10 @@ olympicg_top3 <- decathlon_data_long %>%
 shot_put_scores_top_3 <- decathlon_data_long %>% 
   filter(names %in% decaster_top3) %>% 
   filter(event == "shot_put")
-
-shot_put_scores_top_3
+ shot_put_scores_top_3
 ```
 
-#What was the average points for competitors who ran the 400m in less than 50 seconds vs. those than ran 400m in more than 50 seconds?
+# Q5. What was the average points for competitors who ran the 400m in less than 50 seconds vs. those than ran 400m in more than 50 seconds?
 ```{r}
 # get the average points for competitors who ran the 400m in less than 50 seconds
 avg_points_400m_under_50s <- decathlon_data_long %>% 

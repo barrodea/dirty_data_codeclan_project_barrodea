@@ -1,10 +1,13 @@
 
+# TASK 1: Decathlon Data Cleansing
+# The purpose of this project is to clean the Decathlon Data provided so that it is a tidy state to be able to save and analyse
+
 library(tidyverse)
-
-
 
 #read in the raw data about decathlon
 library(here)
+
+here::here()
 
 decathlon_data <- read_rds(here("raw_data/decathlon.rds"))
 

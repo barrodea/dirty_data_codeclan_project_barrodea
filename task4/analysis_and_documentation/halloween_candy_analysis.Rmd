@@ -5,29 +5,31 @@ date: "14/07/2021"
 output: html_document
 ---
 
+# This file is for performing analysis on the Halloween Candy Data in it's clean and tidy version. 
+
+# 1. Install packages required 
 ```{r}
 library(tidyverse)
 ```
 
 
-```{r}
-here::here()
-```
-
-
+# 2. Read in the clean csv file
 ```{r}
 library(here)
 candy_rating_top_countries <- read_csv(here("clean_data/candy_rating_top_countries.csv"))
 ```
 
-#What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)?
+# 3. Perform Analysis
+# Q1. What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)?
 ```{r}
+# group data by year to get the ratings per year and not overall and filter out where there is no ratings
 rating_count <- candy_rating_top_countries %>% 
   group_by(year) %>% 
   count(rating) %>% 
   filter(rating != "no_rating") %>% 
   ungroup()
 
+# summarise the number of ratings per year
 ratings_per_year <- rating_count %>% 
   group_by(year) %>% 
   summarise(sum(n))
@@ -35,8 +37,10 @@ ratings_per_year <- rating_count %>%
 
 
 
-#What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+# Q2. What was the average age of people who are going out trick or treating?
 ```{r}
+# assume the ages over 100 are an error and filter out and any age of 0 is ommitted as these are mainly where no age was given
+# first filter by those going out
 mean_age_going_out <- candy_rating_top_countries %>% 
   filter(age > 0, age < 100) %>% 
   filter(going_out == "Yes") %>% 
@@ -44,8 +48,9 @@ mean_age_going_out <- candy_rating_top_countries %>%
   pull()
 ```
 
-
+# Q3. What was the average age of people who are not going trick or treating?
 ```{r}
+# then my those who are not going out
 mean_age_not_going_out <- candy_rating_top_countries %>% 
   filter(age > 0, age < 100) %>% 
   filter(going_out == "No") %>% 
@@ -53,7 +58,9 @@ mean_age_not_going_out <- candy_rating_top_countries %>%
   pull()
 ```
 
-#For each of joy, despair and meh, which candy bar revived the most of these ratings?
+
+
+# For each of joy, despair and meh, which candy bar revived the most of these ratings?
 ```{r}
 top_rating_per_candy <- candy_rating_top_countries %>% 
   group_by(rating) %>% 
@@ -63,19 +70,19 @@ top_rating_per_candy <- candy_rating_top_countries %>%
 top_rating_per_candy
 ```
 
-# How many people rated Starburst as despair?
+# Q4. How many people rated Starburst as despair?
 ```{r}
 starburst_despair_count <- candy_rating_top_countries %>% 
-  group_by(rating) %>% 
   filter(candy == "starburst",
          rating == "DESPAIR") %>% 
   count(rating) 
+
+starburst_despair_count
 ```
 
-
-
-#For the next three questions, count despair as -1, joy as +1 and meh as 0.
+# For the next three questions, count despair as -1, joy as +1 and meh as 0.
 ```{r}
+# create a new column converting rating values into numeric values
 candy_rating_nums <- candy_rating_top_countries %>% 
   filter(rating != "no_rating") %>% 
   mutate(rating_num = 
@@ -86,112 +93,40 @@ candy_rating_nums <- candy_rating_top_countries %>%
            ))
 ```
 
-What was the most popular candy bar by this rating system for each gender in the dataset?
-```{r}
-top_rating_per_male <- candy_rating_nums %>% 
-  filter(gender =="Male")%>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num) 
 
-top_rating_per_male
-```
-
+# Q.5 What was the most popular candy bar by this rating system for each gender in the dataset?
 
 ```{r}
-top_rating_per_female <- candy_rating_nums %>% 
-  filter(gender =="Female")%>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num) 
-
-top_rating_per_female
-```
-```{r}
-top_rating_per_other <- candy_rating_nums %>% 
-  filter(gender =="Other")%>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num) 
-
-top_rating_per_other
-```
-
-```{r}
-top_rating_per_not_say <- candy_rating_nums %>% 
-  filter(gender =="I'd rather not say")%>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num) 
-
-top_rating_per_not_say
-```
-```{r}
-top_rating_per_unknown <- candy_rating_nums %>% 
-  filter(gender =="unknown")%>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num) 
-
-top_rating_per_unknown
-```
-#What was the most popular candy bar in each year?
-```{r}
-#2015
-top_rated_2015 <- candy_rating_nums %>% 
-  filter(year == "2015") %>% 
-  group_by(candy) %>% 
+candy_rating_by_gender <- candy_rating_nums %>% 
+  group_by(gender, candy) %>% 
   summarise(rating_num = sum(rating_num)) %>% 
   slice_max(rating_num, n = 1)
 
-#2016
-top_rated_2016 <- candy_rating_nums %>% 
-  filter(year == "2016") %>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num, n = 1)
-
-#2017
-top_rated_2017 <- candy_rating_nums %>% 
-  filter(year == "2017") %>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num, n = 1)
+candy_rating_by_gender
 ```
- 
-#What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+
+# Q6. What was the most popular candy bar in each year?
 ```{r}
-#US
-top_rated_USA <- candy_rating_nums %>% 
-  filter(country == "USA") %>% 
-  group_by(candy) %>% 
+candy_rating_by_year <- candy_rating_nums %>% 
+  group_by(year, candy) %>% 
   summarise(rating_num = sum(rating_num)) %>% 
   slice_max(rating_num, n = 1)
-top_rated_USA
 
-#Canada
-top_rated_canada <- candy_rating_nums %>% 
-  filter(country == "Canada") %>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num, n = 1)
-top_rated_canada
-
-#UK
-top_rated_uk <- candy_rating_nums %>% 
-  filter(country == "UK") %>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num, n = 1)
-top_rated_uk
-
-#other
-top_rated_other <- candy_rating_nums %>% 
-  filter(country == "Other") %>% 
-  group_by(candy) %>% 
-  summarise(rating_num = sum(rating_num)) %>% 
-  slice_max(rating_num, n = 1)
-top_rated_other
+candy_rating_by_year 
 ```
+
+
+# Q7. What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+```{r}
+candy_rating_by_country<- candy_rating_nums %>% 
+  group_by(country, candy) %>% 
+  summarise(rating_num = sum(rating_num)) %>% 
+  slice_max(rating_num, n = 1)
+
+candy_rating_by_country 
+```
+
 
 
