@@ -1,0 +1,177 @@
+---
+  title: "candy_data_cleansing"
+output: html_notebook
+---
+  
+  # Introduction: This project is based on the data collected about Halloween Candy. This file is for reading in the candy data for 3 years (2015-2017) and clean the data in the a way that I will then be able to perform meaningfil analysis. Firstly I will install the relevant packages that I require and then go through the data cleansing step by step.
+  
+  # 1. Open packages necessary for cleaning the data
+
+library(tidyverse)
+library(readxl)
+library(stringr)
+library(janitor)
+
+
+# 2. Read in the data for all 3 years and look to see the type of data available
+# 2.1 2015
+
+library(here)
+
+candy_2015 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2015.xlsx"))
+
+head(candy_2015)
+
+# 2.2 2016
+
+candy_2016 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2016.xlsx"))
+
+head(candy_2016)
+
+# 2.3 2017
+candy_2017 <- read_excel(here("raw_data/candy_ranking_data/boing-boing-candy-2017.xlsx"))
+
+head(candy_2017)
+
+
+
+# 3. Clean the headings for all 3 years tp a more readable format for R
+
+candy_2015_headings <- candy_2015 %>% 
+  clean_names()
+
+candy_2016_headings <- candy_2016 %>% 
+  clean_names()
+
+
+
+# 4. Remove unnecessary text or numbers in the heading in the 2017 data
+
+# look at the column names
+candy_2017_headings <- candy_2017 %>% 
+  clean_names() 
+
+# use regex to create a list of cloumns without the unnecessary characters
+candy_2017_headings_test <- colnames(candy_2017_headings) %>% 
+  str_replace_all(pattern = "q[0-9]_", replacement = "")
+
+
+# 5. Rename the headings in 2017 based on the cleaning above 
+names(candy_2017_headings) <- candy_2017_headings_test
+
+
+
+# 6. Remove and columns that will not be required for the analysis
+
+# remove columns based on order in the data
+candy_2015_subset <- candy_2015_headings %>% 
+  select(-c(1, 12, 18, 23, 26, 27, 28, 33:35, 38, 41, 45, 88, 90, 93, 94, 95, 97:114, 116:124))
+
+
+# remove columns based on order in the data
+candy_2016_subset <- candy_2016_headings %>% 
+  select(-c(1, 6, 12, 15, 21, 22, 26, 27, 31, 32, 38, 39, 43, 49, 79, 102, 104, 105, 107:123))
+
+# remove columns based on order in the data
+candy_2017_subset <- candy_2017_headings %>% 
+  select(-c(1, 6, 12, 15, 21 , 22, 26, 27, 31, 32, 38, 39, 43, 49, 69, 81, 86, 105, 107, 108, 110:120))
+
+
+# 7. Add addiional columns and rename columns so that all 3 year match
+
+# add in columns necessary for the analysis based on other years and rename existing names to match other data
+candy_2015_subset <- candy_2015_subset %>% 
+  add_column("gender" = "unknown", "country" = "unknown", "coffee_crisp" = "no_rating", "dove_bars" = "no_rating", "mike_and_ike" = "no_rating" , "blue_m_ms" = "no_rating", "red_m_ms" = "no_rating", "independent_m_ms" = "no_rating", "mr_goodbar" = "no_rating", "peeps" = "no_rating", "reeses_pieces" = "no_rating", "sourpatch_kids_i_e_abominations_of_nature" = "no_rating", "sweet_tarts" = "no_rating", "take_5" = "no_rating", "tic_tacs" = "no_rating", "whatchamacallit_bars" = "no_rating", "year" = "2015") %>% 
+  rename("age" = "how_old_are_you", "going_out"= "are_you_going_actually_going_trick_or_treating_yourself", "100_grand_bar" = "x100_grand_bar", "bonkers_the_candy" = "bonkers", "boxo_raisins"= "box_o_raisins", "hersheys_dark_chocolate" = "dark_chocolate_hershey", "hersheys_kisses" = "hershey_s_kissables", "licorice_yes_black" = "licorice", "black_and_orange_wrapper" = "anonymous_brown_globs_that_come_in_black_and_orange_wrappers", "green_party_m_ms" = "mint_m_ms",  ) %>% 
+  mutate(age = as.integer(age)) # change age to integer with assumption this removes all non numeric values in column
+
+
+# add in columns necessary for the analysis based on other years and rename existing names to match other data
+candy_2016_subset <- candy_2016_subset %>% 
+  add_column("take_5" = "no_rating", "bubble_gum" = "no_rating", "green_party_m_ms" = "no_rating", "mint_leaves" = "no_rating", "runts" = "no_rating", "ribbon_candy" = "no_rating", "peanut_butter_bars" = "no_rating", "year" = "2016") %>% 
+  rename("age" = "how_old_are_you", "gender" = "your_gender", "country" = "which_country_do_you_live_in", "independent_m_ms" = "third_party_m_ms","going_out" = "are_you_going_actually_going_trick_or_treating_yourself", "100_grand_bar" = "x100_grand_bar", "sweetums" = "sweetums_a_friend_to_diabetes", "black_and_orange_wrapper" = "anonymous_brown_globs_that_come_in_black_and_orange_wrappers"                                                             ) %>% 
+  mutate(age = as.integer(age)) # change age to integer with assumption this removes all non numeric values in column
+
+# add in columns necessary for the analysis based on other years and rename existing names to match other data
+candy_2017_subset <- candy_2017_subset %>% 
+  add_column("bubble_gum" = "no_rating", "mint_leaves" = "no_rating", "runts" = "no_rating", "ribbon_candy" = "no_rating", "peanut_butter_bars" = "no_rating", "mary_janes" = "no_rating", "year" = "2017") %>% 
+  rename("sweetums" = "sweetums_a_friend_to_diabetes", "black_and_orange_wrapper" = "anonymous_brown_globs_that_come_in_black_and_orange_wrappers_a_k_a_mary_janes"                                                             ) %>% 
+  mutate(age = as.integer(age)) # change age to integer with assumption this removes all non numeric values in column
+
+
+# 8. Reorder 2015 and 2017 to match the order of columns in 2016
+#reorder based on column number
+candy_2015_reorder <- candy_2015_subset %>% 
+  select(2, 80, 1, 81, 4:10, 3, 12, 13, 15, 17, 68, 16, 82, 20, 83, 21:25, 32, 19, 27, 26, 28, 29, 44, 55, 56, 30, 31, 42, 33, 35, 34, 36:40, 84, 41, 51, 61, 60, 85:87, 43, 57, 58, 88, 79, 47, 48, 49, 89, 50, 46, 52, 90, 45, 64, 65, 66, 67, 18, 91, 69, 70, 92, 71, 72, 94, 73, 74, 53, 76, 77, 14, 95, 78, 93, 11, 62, 59, 54, 63, 75, 96)
+
+
+
+#reorder based on column number
+candy_2017_reorder <- candy_2017_subset %>% 
+  select(1:44, 95, 45:52, 54:79, 81:89, 80, 90, 53, 91:94, 96)
+
+
+# 9. merge the 3 subsets of data together
+
+candy_data_2015_to_2017 <- rbind(candy_2015_reorder, candy_2016_subset, candy_2017_reorder)
+
+
+# 10. Count NAs in all columns
+candy_data_2015_to_2017 %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+
+# 11. Replace NAs in country column with "unknown" as this column is required for the analysis
+candy_data_2015_to_2017 <- candy_data_2015_to_2017 %>% 
+  mutate(country = replace_na(country, 'unknown'))
+
+#check if any NAs remain in country
+candy_data_2015_to_2017 %>% 
+  count(is.na(country))
+
+
+# 12. Pivot data so that the ratings are in one column making it easier to analyse
+
+candy_ratings_summary <- pivot_longer(candy_data_2015_to_2017, cols = 5:95, names_to = "candy", values_to = "rating")
+
+
+
+
+# 13. Check for remaing NAs
+candy_ratings_summary %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+
+# 14. Replace NAs without deleting any of the rows
+candy_ratings_summary <- candy_ratings_summary %>% 
+  mutate(going_out= replace_na(going_out, "unknown"),
+         gender = replace_na(gender, "unknown"),
+         age = replace_na(age, 0),
+         rating = replace_na(rating, "no_rating"))
+
+candy_ratings_summary %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+
+
+# 15. Cleaning the country column
+# 15.1 Check for the distinct values in the column
+candy_ratings_summary %>% 
+  distinct(country)
+
+# 15.2 Replace all versions of values like Canada with Canada, USA with USA, UK with UK and all remaining with Other
+candy_rating_top_countries <- candy_ratings_summary%>%
+  mutate(
+    country = case_when(
+      country %in% c("canada", "Can",  "Canae", "Canada`", "CANADA", "soviet canuckistan")  ~ "Canada",
+      country %in% c("usa", "US", "uSA", "USSA" , "USA!", "USA (I think but it's an election year so who can really tell)", "Usa" , "Us", "USA USA USA", "the best one - usa", "USA! USA! USA!",  "USA!!!!!!", "USA! USA!", "USA USA USA USA" , "USAUSAUSA", "USA of A", "USA? Hard to tell anymore. .",  "usas", "USa", "USAA", "USA USA USA!!!!",  "United States of America" , "united states" , "United States",  "us", "U.S.A.", "Murica", "U.S.", "America", "Units States", "United states", "u.s.", "The Yoo Ess of Aaayyyyyy", "united states of america", "United Sates", "Sub-Canadian North America... 'Merica", "Trumpistan", "U.s.", "Merica", "UNitedStates", "United Stetes", "america", "United  States of America", "United State", "United Staes", "u.s.a.", "unhinged states", "US of A", "Unites States", "North Carolina", "Unied States", "U S", "The United States of America", "unite states", "USA? Hard to tell anymore..", "'merica", "Pittsburgh", "New York", "California", "I pretend to be from Canada, but I am really from the United States.", "United Stated", "UNited States", "United staes", "The United States", "Ahem....Amerca", "New Jersey", "United ststes", "United Statss", "murrika", "Alaska", "united States", "u s a", "United Statea", "united ststes") ~ "USA",
+      country %in% c("england", "uk", "United Kingdom", "England", "United Kingom", "U.K.", "Uk", "Scotland", "endland", "United kingdom", "United Kindom") ~ "UK",
+      TRUE ~ "Other")        
+  )
+
+candy_rating_top_countries %>% 
+  distinct(country) %>% 
+  pull()
+
+
+# Write clean data to clean_data file
+write_csv(candy_rating_top_countries, "clean_data/candy_rating_top_countries.csv")
+
+
